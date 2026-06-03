@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เปรียบเทียบอาหาร — FoodCheck</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans Thai', sans-serif; }
+    .pd-row { background: #FEF9C3; }
+    .search-dropdown { max-height: 280px; overflow-y: auto; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+    /* Highlight min/max in compare table */
+    .val-best { color: #059669; font-weight: 700; }
+    .val-worst { color: #DC2626; font-weight: 700; }
+  </style>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { primary: '#0891B2', 'primary-dark': '#0E7490', accent: '#059669' } } } }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 font-bold text-primary text-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+        </svg>
+        FoodCheck
+      </a>
+      <span class="text-sm font-medium text-gray-700">เปรียบเทียบอาหาร</span>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 py-6" x-data="compareApp()" x-init="init()">
+
+    <!-- Back -->
+    <a href="/" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-4 cursor-pointer transition-colors min-h-[44px]">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      กลับหน้าค้นหา
+    </a>
+
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">เปรียบเทียบอาหาร (สูงสุด 4 รายการ)</h1>
+
+    <!-- Food Picker Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      <template x-for="(slot, idx) in slots" :key="idx">
+        <div class="relative">
+          <!-- Filled slot -->
+          <div x-show="slot.food" class="bg-white border-2 border-primary/30 rounded-xl p-3 relative">
+            <button @click="removeFood(idx)"
+                    class="absolute top-2 right-2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 cursor-pointer transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-lg" x-text="slot.food?.food_code"></span>
+            <p class="text-sm font-semibold text-gray-900 mt-1 pr-6 leading-tight" x-text="slot.food?.name_th || slot.food?.name_en"></p>
+            <p class="text-xs text-gray-400 truncate" x-text="slot.food?.name_en"></p>
+          </div>
+
+          <!-- Empty slot: search -->
+          <div x-show="!slot.food" class="relative">
+            <input
+              type="search"
+              :placeholder="'อาหารที่ ' + (idx+1)"
+              x-model="slot.query"
+              @input.debounce.300ms="searchSlot(idx)"
+              @keydown.escape="slot.showDrop = false"
+              @focus="if(slot.suggestions.length) slot.showDrop = true"
+              autocomplete="off"
+              class="w-full border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-0 bg-white min-h-[52px]">
+
+            <div x-show="slot.showDrop && slot.suggestions.length > 0"
+                 @click.away="slot.showDrop = false"
+                 class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 search-dropdown">
+              <template x-for="item in slot.suggestions" :key="item.id">
+                <div @click="selectFood(idx, item)"
+                     class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors">
+                  <span class="text-xs text-primary font-medium" x-text="item.food_code + ' '"></span>
+                  <span class="text-sm text-gray-800" x-text="item.name_th || item.name_en"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Loading -->
+    <div x-show="loadingCompare" class="text-center py-12 text-gray-400">
+      <svg class="animate-spin w-8 h-8 mx-auto mb-2 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+      กำลังโหลด...
+    </div>
+
+    <!-- Comparison Table -->
+    <div x-show="!loadingCompare && compareData.length >= 2">
+
+      <!-- Weight adjuster -->
+      <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 flex flex-wrap items-center gap-4">
+        <span class="text-sm font-medium text-gray-700">น้ำหนักที่กิน:</span>
+        <div class="flex items-center gap-2">
+          <button @click="weight = Math.max(10, weight - 10)"
+                  class="w-9 h-9 border border-gray-300 rounded-lg text-lg font-bold text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors flex items-center justify-center">−</button>
+          <input type="number" x-model.number="weight" min="10" max="2000" step="10"
+                 class="w-20 text-center border border-gray-300 rounded-lg px-2 py-1.5 text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary">
+          <button @click="weight = Math.min(2000, weight + 10)"
+                  class="w-9 h-9 border border-gray-300 rounded-lg text-lg font-bold text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors flex items-center justify-center">+</button>
+          <span class="text-sm text-gray-500">กรัม</span>
+        </div>
+      </div>
+
+      <!-- Mobile: card per nutrient -->
+      <div class="sm:hidden space-y-2">
+        <template x-for="row in mergedRows" :key="row.name">
+          <div :class="pdNames.includes(row.name) ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-200'"
+               class="border rounded-xl p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <span x-show="pdNames.includes(row.name)" class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+              <span class="text-sm font-medium text-gray-800" x-text="row.name"></span>
+              <span class="text-xs text-gray-400" x-text="row.unit"></span>
+            </div>
+            <div class="grid gap-1" :style="'grid-template-columns: repeat(' + compareData.length + ', 1fr)'">
+              <template x-for="(val, i) in row.values" :key="i">
+                <div class="text-center">
+                  <div class="text-xs text-gray-400 mb-0.5 truncate"
+                       x-text="compareData[i]?.food.name_th?.slice(0,8) || compareData[i]?.food.name_en?.slice(0,8)"></div>
+                  <div class="font-semibold text-sm"
+                       :class="getClass(row.values, i)"
+                       x-text="calcVal(val)"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Desktop: table -->
+      <div class="hidden sm:block bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="text-left px-4 py-3 font-medium text-gray-600 w-44">สารอาหาร</th>
+                <th class="text-center px-2 py-3 font-medium text-gray-600 text-xs">หน่วย</th>
+                <template x-for="(item, i) in compareData" :key="i">
+                  <th class="text-center px-3 py-3 min-w-[120px]">
+                    <span class="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded" x-text="item.food.food_code"></span>
+                    <div class="text-xs font-semibold text-gray-800 mt-1 leading-tight"
+                         x-text="item.food.name_th || item.food.name_en"></div>
+                  </th>
+                </template>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <template x-for="row in mergedRows" :key="row.name">
+                <tr :class="pdNames.includes(row.name) ? 'bg-yellow-50' : 'hover:bg-gray-50'">
+                  <td class="px-4 py-2.5 text-gray-800 flex items-center gap-2">
+                    <span x-show="pdNames.includes(row.name)" class="w-2 h-2 bg-yellow-400 rounded-full flex-shrink-0"></span>
+                    <span x-text="row.name"></span>
+                  </td>
+                  <td class="px-2 py-2.5 text-center text-xs text-gray-400" x-text="row.unit"></td>
+                  <template x-for="(val, i) in row.values" :key="i">
+                    <td class="px-3 py-2.5 text-center"
+                        :class="getClass(row.values, i)"
+                        x-text="calcVal(val)">
+                    </td>
+                  </template>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex gap-4">
+          <span><span class="text-green-600 font-bold">สีเขียว</span> = ค่าน้อยที่สุด</span>
+          <span><span class="text-red-600 font-bold">สีแดง</span> = ค่ามากที่สุด</span>
+          <span>เฉพาะแถวที่เป็นตัวเลขเปรียบเทียบได้</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty state -->
+    <div x-show="!loadingCompare && compareData.length < 2" class="text-center py-16 text-gray-400">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 mx-auto mb-3 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M8 3H2v13h6"/><path d="M22 8H8v13h14z"/>
+      </svg>
+      <p class="text-base font-medium text-gray-500">เลือกอาหารอย่างน้อย 2 รายการเพื่อเปรียบเทียบ</p>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl p-4">
+      <p class="text-sm text-yellow-700">
+        <strong>หมายเหตุ:</strong> ค่าที่แสดงเป็นค่าเฉลี่ยต่อ 100 กรัม จากฐานข้อมูล INMU
+        ผู้ป่วยล้างไตควรปรึกษานักโภชนาการหรือแพทย์ประจำตัวก่อนปรับอาหาร
+      </p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-8 bg-white border-t border-gray-200 py-6 px-4">
+    <div class="max-w-5xl mx-auto text-center text-sm text-gray-500 space-y-1">
+      <p>ข้อมูลจาก <strong class="text-gray-700">Thai FCD</strong> — สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU)</p>
+      <p class="text-xs text-gray-400">ใช้เพื่อการศึกษา ไม่ใช่เชิงพาณิชย์</p>
+    </div>
+  </footer>
+
+  <script>
+    function compareApp() {
+      return {
+        slots: [
+          { food: null, query: '', suggestions: [], showDrop: false },
+          { food: null, query: '', suggestions: [], showDrop: false },
+          { food: null, query: '', suggestions: [], showDrop: false },
+          { food: null, query: '', suggestions: [], showDrop: false },
+        ],
+        compareData: [],
+        loadingCompare: false,
+        weight: 100,
+        pdNames: ['Protein', 'Phosphorus', 'Potassium', 'Sodium'],
+        mergedRows: [],
+
+        async init() {
+          // ดึง ids จาก URL query string
+          const params = new URLSearchParams(window.location.search);
+          const idsParam = params.get('ids');
+          if (idsParam) {
+            const ids = idsParam.split(',').map(x => x.trim()).filter(Boolean).slice(0, 4);
+            for (let i = 0; i < ids.length; i++) {
+              await this.loadFoodById(i, parseInt(ids[i]));
+            }
+          }
+        },
+
+        async loadFoodById(slotIdx, foodId) {
+          const res = await fetch('/api/food/' + foodId);
+          if (!res.ok) return;
+          const data = await res.json();
+          this.slots[slotIdx].food = data.food;
+          await this.refreshCompare();
+        },
+
+        async searchSlot(idx) {
+          const q = this.slots[idx].query.trim();
+          if (q.length < 2) { this.slots[idx].suggestions = []; return; }
+          const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+          const data = await res.json();
+          this.slots[idx].suggestions = data.results.slice(0, 10);
+          this.slots[idx].showDrop = true;
+        },
+
+        async selectFood(idx, item) {
+          this.slots[idx].food = item;
+          this.slots[idx].query = '';
+          this.slots[idx].showDrop = false;
+          this.slots[idx].suggestions = [];
+          await this.refreshCompare();
+        },
+
+        async removeFood(idx) {
+          this.slots[idx].food = null;
+          await this.refreshCompare();
+        },
+
+        async refreshCompare() {
+          const ids = this.slots.filter(s => s.food).map(s => s.food.id);
+          if (ids.length < 1) { this.compareData = []; this.mergedRows = []; return; }
+          this.loadingCompare = true;
+          const res = await fetch('/api/compare?ids=' + ids.join(','));
+          const data = await res.json();
+          this.compareData = data.items;
+          this.buildMergedRows();
+          this.loadingCompare = false;
+        },
+
+        buildMergedRows() {
+          if (!this.compareData.length) { this.mergedRows = []; return; }
+          // ใช้ลำดับจาก item แรก
+          const rows = [];
+          const first = this.compareData[0].nutrients;
+          for (const n of first) {
+            const values = this.compareData.map(item => {
+              const found = item.nutrients.find(x => x.nutrient_name === n.nutrient_name);
+              return found?.per_100g ?? null;
+            });
+            rows.push({ name: n.nutrient_name, unit: n.unit, values });
+          }
+          this.mergedRows = rows;
+        },
+
+        getClass(values, idx) {
+          const nums = values.map(v => parseFloat(v)).filter(v => !isNaN(v));
+          if (nums.length < 2) return '';
+          const val = parseFloat(values[idx]);
+          if (isNaN(val)) return '';
+          if (val === Math.min(...nums)) return 'val-best';
+          if (val === Math.max(...nums)) return 'val-worst';
+          return '';
+        },
+
+        calcVal(raw) {
+          if (raw === null || raw === undefined || raw === '—' || raw === '-') return '—';
+          const num = parseFloat(raw);
+          if (isNaN(num)) return raw;
+          const val = num * this.weight / 100;
+          return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

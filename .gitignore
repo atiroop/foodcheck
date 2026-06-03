@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+*.egg-info/
+
+# Data — ไฟล์ใหญ่/regenerate ได้ ไม่ต้องขึ้น git
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/*.csv
+data/*.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# secrets
+.env
+*.local

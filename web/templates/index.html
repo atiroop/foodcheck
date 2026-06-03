@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodCheck — ค้นหาโภชนาการอาหารไทย</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Noto Sans Thai', sans-serif; }
+    .search-dropdown { max-height: 340px; overflow-y: auto; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+  </style>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { primary: '#0891B2', 'primary-dark': '#0E7490', accent: '#059669' } } } }
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2 font-bold text-primary text-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+        </svg>
+        FoodCheck
+      </a>
+      <a href="/compare" class="flex items-center gap-1 text-sm text-gray-600 hover:text-primary transition-colors min-h-[44px] px-2 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H2v13h6"/><path d="M22 8H8v13h14z"/>
+        </svg>
+        <span class="hidden sm:inline">เปรียบเทียบ</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="max-w-4xl mx-auto px-4 py-8"
+        x-data="searchApp()"
+        x-init="loadGroups()">
+
+    <!-- Hero -->
+    <div class="text-center mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">ค้นหาข้อมูลโภชนาการ</h1>
+      <p class="text-gray-500 text-base">อาหารไทย 1,781 รายการ — ข้อมูลจากสถาบันโภชนาการ ม.มหิดล</p>
+    </div>
+
+    <!-- Search Box -->
+    <div class="relative mb-6">
+      <div class="flex gap-2">
+        <!-- Group Filter -->
+        <select x-model="selectedGroup" @change="doSearch()"
+                class="border border-gray-300 rounded-xl px-3 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer min-h-[52px]">
+          <option value="">ทุกกลุ่ม</option>
+          <template x-for="g in groups" :key="g.status">
+            <option :value="g.status" x-text="g.status + ' — ' + g.name_en"></option>
+          </template>
+        </select>
+
+        <!-- Search Input -->
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
+          <input
+            type="search"
+            x-model="query"
+            @input.debounce.300ms="doSearch()"
+            @keydown.escape="showDropdown = false"
+            @focus="if(results.length) showDropdown = true"
+            placeholder="พิมพ์ชื่ออาหาร เช่น ข้าว, ปลา, ไก่..."
+            class="w-full border border-gray-300 rounded-xl pl-11 pr-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[52px]"
+            autocomplete="off"
+          >
+          <!-- Spinner -->
+          <div x-show="loading" class="absolute inset-y-0 right-4 flex items-center">
+            <svg class="animate-spin w-5 h-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+          </div>
+
+          <!-- AJAX Dropdown -->
+          <div x-show="showDropdown && results.length > 0"
+               x-transition
+               @click.away="showDropdown = false"
+               class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 search-dropdown">
+            <template x-for="item in results" :key="item.id">
+              <a :href="'/food/' + item.id"
+                 class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors min-h-[52px]">
+                <span class="text-xs bg-primary/10 text-primary font-medium px-2 py-1 rounded-lg mt-0.5 flex-shrink-0"
+                      x-text="item.food_code"></span>
+                <div class="min-w-0">
+                  <div class="font-medium text-gray-900 text-base truncate" x-text="item.name_th || item.name_en"></div>
+                  <div class="text-sm text-gray-500 truncate" x-text="item.name_en"></div>
+                </div>
+              </a>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- No results msg -->
+      <p x-show="searched && results.length === 0 && !loading"
+         class="mt-2 text-sm text-gray-500 text-center">
+        ไม่พบรายการที่ตรงกัน — ลองใช้คำค้นอื่น
+      </p>
+    </div>
+
+    <!-- Results Table (full list) -->
+    <div x-show="results.length > 0 && !showDropdown" x-transition>
+
+      <!-- Mobile: Card layout -->
+      <div class="sm:hidden space-y-3">
+        <p class="text-sm text-gray-500">พบ <span class="font-semibold text-gray-800" x-text="results.length"></span> รายการ</p>
+        <template x-for="item in results" :key="item.id">
+          <a :href="'/food/' + item.id"
+             class="block bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md cursor-pointer transition-shadow">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs bg-primary/10 text-primary font-medium px-2 py-1 rounded-lg" x-text="item.food_code"></span>
+              <span class="text-xs text-gray-400" x-text="item.status"></span>
+            </div>
+            <div class="font-semibold text-gray-900 text-base" x-text="item.name_th || item.name_en"></div>
+            <div class="text-sm text-gray-500 mb-3" x-text="item.name_en"></div>
+            <!-- Mini nutrient badges -->
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="bg-orange-50 text-orange-700 px-2 py-1 rounded-lg">
+                พลังงาน <strong x-text="item.energy ?? '—'"></strong> kcal
+              </span>
+              <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg">
+                โปรตีน <strong x-text="item.protein ?? '—'"></strong> g
+              </span>
+              <span class="bg-yellow-50 text-yellow-700 px-2 py-1 rounded-lg">
+                P <strong x-text="item.phosphorus ?? '—'"></strong> mg
+              </span>
+              <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded-lg">
+                K <strong x-text="item.potassium ?? '—'"></strong> mg
+              </span>
+              <span class="bg-red-50 text-red-700 px-2 py-1 rounded-lg">
+                Na <strong x-text="item.sodium ?? '—'"></strong> mg
+              </span>
+            </div>
+          </a>
+        </template>
+      </div>
+
+      <!-- Desktop: Table layout -->
+      <div class="hidden sm:block bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <p class="text-sm text-gray-500">พบ <span class="font-semibold text-gray-800" x-text="results.length"></span> รายการ</p>
+          <p class="text-xs text-gray-400">คลิกรายการเพื่อดูรายละเอียด</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
+              <tr>
+                <th class="text-left px-4 py-3 font-medium">ชื่ออาหาร</th>
+                <th class="text-right px-3 py-3 font-medium">พลังงาน<br><span class="font-normal normal-case">(kcal)</span></th>
+                <th class="text-right px-3 py-3 font-medium">โปรตีน<br><span class="font-normal normal-case">(g)</span></th>
+                <th class="text-right px-3 py-3 font-medium text-yellow-700">P<br><span class="font-normal normal-case">(mg)</span></th>
+                <th class="text-right px-3 py-3 font-medium text-purple-700">K<br><span class="font-normal normal-case">(mg)</span></th>
+                <th class="text-right px-3 py-3 font-medium text-red-700">Na<br><span class="font-normal normal-case">(mg)</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <template x-for="item in results" :key="item.id">
+                <tr @click="window.location='/food/'+item.id"
+                    class="hover:bg-gray-50 cursor-pointer transition-colors">
+                  <td class="px-4 py-3">
+                    <div class="font-medium text-gray-900" x-text="item.name_th || item.name_en"></div>
+                    <div class="text-xs text-gray-400" x-text="item.food_code + ' · ' + (item.name_en || '')"></div>
+                  </td>
+                  <td class="px-3 py-3 text-right text-gray-700" x-text="item.energy ?? '—'"></td>
+                  <td class="px-3 py-3 text-right text-gray-700" x-text="item.protein ?? '—'"></td>
+                  <td class="px-3 py-3 text-right text-yellow-700 font-medium" x-text="item.phosphorus ?? '—'"></td>
+                  <td class="px-3 py-3 text-right text-purple-700 font-medium" x-text="item.potassium ?? '—'"></td>
+                  <td class="px-3 py-3 text-right text-red-700 font-medium" x-text="item.sodium ?? '—'"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state (first load) -->
+    <div x-show="!searched && results.length === 0" class="text-center py-16 text-gray-400">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 mx-auto mb-4 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+      </svg>
+      <p class="text-lg font-medium text-gray-500">พิมพ์ชื่ออาหารเพื่อเริ่มค้นหา</p>
+      <p class="text-sm mt-1">รองรับภาษาไทยและภาษาอังกฤษ</p>
+    </div>
+
+    <!-- PD Notice -->
+    <div class="mt-8 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl p-4">
+      <p class="text-sm font-semibold text-yellow-800 mb-1">สำหรับผู้ป่วยล้างไตทางช่องท้อง (PD)</p>
+      <p class="text-sm text-yellow-700">ค่าโภชนาการที่แสดงเป็นค่าเฉลี่ยต่อ 100 กรัม ไม่ใช่คำแนะนำเฉพาะบุคคล กรุณาปรึกษานักโภชนาการหรือแพทย์ประจำตัวก่อนปรับอาหาร</p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-8 bg-white border-t border-gray-200 py-6 px-4">
+    <div class="max-w-4xl mx-auto text-center text-sm text-gray-500 space-y-1">
+      <p>ข้อมูลโภชนาการจาก <strong class="text-gray-700">Thai Food Composition Database (Thai FCD)</strong></p>
+      <p>สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU) — เพื่อการศึกษาและไม่ใช่เชิงพาณิชย์</p>
+      <p class="text-xs text-gray-400 pt-1">ค่าโภชนาการเป็นค่าเฉลี่ยต่อ 100 กรัม</p>
+    </div>
+  </footer>
+
+  <script>
+    function searchApp() {
+      return {
+        query: '',
+        selectedGroup: '',
+        results: [],
+        groups: [],
+        loading: false,
+        searched: false,
+        showDropdown: false,
+
+        async loadGroups() {
+          const res = await fetch('/api/groups');
+          const data = await res.json();
+          this.groups = data.groups;
+        },
+
+        async doSearch() {
+          const q = this.query.trim();
+          const g = this.selectedGroup;
+
+          // ต้องพิมพ์อย่างน้อย 2 ตัวหรือเลือกกลุ่ม
+          if (q.length < 2 && !g) {
+            this.results = [];
+            this.searched = false;
+            this.showDropdown = false;
+            return;
+          }
+
+          this.loading = true;
+          this.searched = true;
+
+          try {
+            const params = new URLSearchParams();
+            if (q) params.set('q', q);
+            if (g) params.set('group', g);
+            const res = await fetch('/api/search?' + params.toString());
+            const data = await res.json();
+            this.results = data.results;
+            // แสดง dropdown เฉพาะตอนพิมพ์ ถ้าเลือก group อย่างเดียวแสดงเป็น table
+            this.showDropdown = q.length >= 2;
+          } catch(e) {
+            console.error(e);
+          } finally {
+            this.loading = false;
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
