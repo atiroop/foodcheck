@@ -50,19 +50,10 @@
     </div>
 
     <!-- Search Box -->
-    <div class="relative mb-6">
-      <div class="flex gap-2">
-        <!-- Group Filter -->
-        <select x-model="selectedGroup" @change="doSearch()"
-                class="border border-gray-300 rounded-xl px-3 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer min-h-[52px]">
-          <option value="">ทุกกลุ่ม</option>
-          <template x-for="g in groups" :key="g.status">
-            <option :value="g.status" x-text="g.status + ' — ' + g.name_en"></option>
-          </template>
-        </select>
+    <div class="mb-6 space-y-2">
 
-        <!-- Search Input -->
-        <div class="relative flex-1">
+      <!-- Search Input (บนสุดเสมอ ทั้ง mobile และ desktop) -->
+      <div class="relative">
           <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -104,11 +95,19 @@
             </template>
           </div>
         </div>
-      </div>
+
+      <!-- Group Filter (อยู่ใต้ search บน mobile) -->
+      <select x-model="selectedGroup" @change="doSearch()"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent cursor-pointer min-h-[52px] text-gray-700">
+        <option value="">— กรองตามกลุ่มอาหาร (ไม่บังคับ) —</option>
+        <template x-for="g in groups" :key="g.status">
+          <option :value="g.status" x-text="g.status + ' — ' + g.name_en"></option>
+        </template>
+      </select>
 
       <!-- No results msg -->
       <p x-show="searched && results.length === 0 && !loading"
-         class="mt-2 text-sm text-gray-500 text-center">
+         class="mt-1 text-sm text-gray-500 text-center">
         ไม่พบรายการที่ตรงกัน — ลองใช้คำค้นอื่น
       </p>
     </div>
