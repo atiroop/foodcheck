@@ -14,9 +14,7 @@
     .search-dropdown { max-height: 280px; overflow-y: auto; }
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
-    /* Highlight min/max in compare table */
-    .val-best { color: #059669; font-weight: 700; }
-    .val-worst { color: #DC2626; font-weight: 700; }
+    .numeric-value { color: #111827; font-weight: 600; }
   </style>
   <script>
     tailwind.config = { theme: { extend: { colors: { primary: '#0891B2', 'primary-dark': '#0E7490', accent: '#059669' } } } }
@@ -181,10 +179,8 @@
             </tbody>
           </table>
         </div>
-        <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400 flex gap-4">
-          <span><span class="text-green-600 font-bold">สีเขียว</span> = ค่าน้อยที่สุด</span>
-          <span><span class="text-red-600 font-bold">สีแดง</span> = ค่ามากที่สุด</span>
-          <span>เฉพาะแถวที่เป็นตัวเลขเปรียบเทียบได้</span>
+        <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
+          <span>แสดงตัวเลขตามน้ำหนักที่เลือกเพื่อใช้เปรียบเทียบ ไม่ใช่คำแนะนำเฉพาะบุคคล</span>
         </div>
       </div>
 
@@ -228,7 +224,14 @@
         compareData: [],
         loadingCompare: false,
         weight: 100,
-        pdNames: ['Protein', 'Phosphorus', 'Potassium', 'Sodium'],
+        pdNames: [
+          'Energy, by calculation',
+          'Protein, total',
+          'Phosphorus',
+          'Potassium',
+          'Sodium',
+          'Moisture'
+        ],
         mergedRows: [],
 
         async init() {
@@ -275,7 +278,7 @@
 
         async refreshCompare() {
           const ids = this.slots.filter(s => s.food).map(s => s.food.id);
-          if (ids.length < 1) { this.compareData = []; this.mergedRows = []; return; }
+          if (ids.length < 2) { this.compareData = []; this.mergedRows = []; return; }
           this.loadingCompare = true;
           const res = await fetch('/api/compare?ids=' + ids.join(','));
           const data = await res.json();
@@ -304,9 +307,7 @@
           if (nums.length < 2) return '';
           const val = parseFloat(values[idx]);
           if (isNaN(val)) return '';
-          if (val === Math.min(...nums)) return 'val-best';
-          if (val === Math.max(...nums)) return 'val-worst';
-          return '';
+          return 'numeric-value';
         },
 
         calcVal(raw) {

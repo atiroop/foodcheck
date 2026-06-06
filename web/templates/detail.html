@@ -103,7 +103,7 @@
           สารอาหารที่ผู้ป่วย PD ต้องระวัง
           <span class="text-yellow-600 font-normal" x-text="'(ต่อ ' + weight + ' ก.)'"></span>
         </p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <template x-for="n in pdNutrients" :key="n.name">
             <div class="bg-white border border-yellow-200 rounded-xl p-3 text-center">
               <div class="text-xs text-gray-500 mb-1" x-text="n.label"></div>
@@ -205,7 +205,14 @@
         loading: true,
         weight: 100,
         foodId: null,
-        pdNames: ['Protein', 'Phosphorus', 'Potassium', 'Sodium'],
+        pdNames: [
+          'Energy, by calculation',
+          'Protein, total',
+          'Phosphorus',
+          'Potassium',
+          'Sodium',
+          'Moisture'
+        ],
         pdNutrients: [],
 
         async load() {
@@ -225,7 +232,14 @@
             const n = this.nutrients.find(x => x.nutrient_name === name);
             return {
               name,
-              label: { Protein: 'โปรตีน', Phosphorus: 'ฟอสฟอรัส (P)', Potassium: 'โพแทสเซียม (K)', Sodium: 'โซเดียม (Na)' }[name],
+              label: {
+                'Energy, by calculation': 'พลังงาน',
+                'Protein, total': 'โปรตีน',
+                Phosphorus: 'ฟอสฟอรัส (P)',
+                Potassium: 'โพแทสเซียม (K)',
+                Sodium: 'โซเดียม (Na)',
+                Moisture: 'น้ำ/ความชื้น'
+              }[name],
               unit: n?.unit || '',
               raw: n?.per_100g || null,
             };

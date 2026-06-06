@@ -1,18 +1,23 @@
 """FoodCheck Web App — FastAPI backend
-อ่าน SQLite thaifcd.sqlite ตอบ API + serve HTML pages
+อ่าน SQLite foodcheck.sqlite ตอบ API + serve HTML pages
 """
 from __future__ import annotations
 
-import math
+import os
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI, Query, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import sqlite3
 
-DB_PATH = Path(__file__).parent.parent / "data" / "thaifcd.sqlite"
+ROOT_DIR = Path(__file__).parent.parent
+DEFAULT_DB_PATH = ROOT_DIR / "data" / "foodcheck.sqlite"
+LEGACY_DB_PATH = ROOT_DIR / "data" / "thaifcd.sqlite"
+DB_PATH = Path(os.getenv("DATABASE_PATH", DEFAULT_DB_PATH))
+if not DB_PATH.exists() and LEGACY_DB_PATH.exists():
+    DB_PATH = LEGACY_DB_PATH
+
 STATIC_DIR = Path(__file__).parent / "static"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
@@ -57,8 +62,8 @@ def search(q: str = Query("", min_length=0), group: str = Query("")) -> dict:
     rows = conn.execute(
         f"""SELECT f.id, f.food_code, f.name_th, f.name_en, f.status,
                    fg.name_en AS group_name,
-                   (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Energy') AS energy,
-                   (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Protein') AS protein,
+                   (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Energy, by calculation') AS energy,
+                   (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Protein, total') AS protein,
                    (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Phosphorus') AS phosphorus,
                    (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Potassium') AS potassium,
                    (SELECT per_100g FROM nutrient WHERE food_id=f.id AND nutrient_name='Sodium') AS sodium

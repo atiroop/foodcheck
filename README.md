@@ -18,6 +18,9 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+โปรเจกต์นี้ใช้ SQLite เป็นหลัก เพราะเป็นเว็บส่วนตัวที่อ่านข้อมูลเยอะและเขียนน้อย
+DB หลักคือ `data/foodcheck.sqlite`
+
 ## ดึงข้อมูล (ทำครั้งเดียว)
 
 ```bash
@@ -37,13 +40,18 @@ python fetch_nutrients.py --retry   # รันซ้ำเฉพาะตัว
 python export.py
 ```
 
-ผลลัพธ์อยู่ใน `data/thaifcd.sqlite`
+ผลลัพธ์หลักอยู่ใน `data/foodcheck.sqlite`
+ถ้ามีไฟล์ legacy ชื่อ `data/thaifcd.sqlite` อยู่ สามารถ copy/rename เป็น `data/foodcheck.sqlite` ได้
 
 ## โครงสร้างฐานข้อมูล
 
-- `food_group` — กลุ่มอาหาร A–Z
-- `food` — รายการอาหาร (id, รหัส, ชื่อไทย/อังกฤษ, ชื่อวิทยาศาสตร์)
-- `nutrient` — ค่าโภชนาการรายตัว (long format)
+Schema หลักอยู่ที่ `scraper/schema_complete.sql`
+
+- `food_group`, `food`, `nutrient` — ข้อมูล Thai FCD
+- `usda_food_mapping`, `usda_nutrient_cache` — USDA fallback cache
+- `user`, `recipe`, `recipe_ingredient` — profile และ recipe builder
+- `pd_nutrient` — config สารอาหารสำคัญสำหรับ PD
+- views: `v_food_nutrient`, `v_pd_nutrient`, `v_recipe_nutrition`
 
 ดูตัวอย่าง query:
 
@@ -52,7 +60,26 @@ python export.py
 SELECT n.nutrient_name, n.per_100g, n.unit
 FROM nutrient n JOIN food f ON f.id = n.food_id
 WHERE f.food_code = 'A6'
-  AND n.nutrient_name IN ('Protein, total','Phosphorus','Potassium','Sodium');
+  AND n.nutrient_name IN (
+    'Energy, by calculation',
+    'Protein, total',
+    'Phosphorus',
+    'Potassium',
+    'Sodium',
+    'Moisture'
+  );
+```
+
+## รันเว็บ
+
+```bash
+uvicorn web.main:app --host 127.0.0.1 --port 8010
+```
+
+หรือกำหนด path DB เอง:
+
+```bash
+DATABASE_PATH=data/foodcheck.sqlite uvicorn web.main:app --host 127.0.0.1 --port 8010
 ```
 
 ## การมีส่วนกับ server ต้นทางอย่างมีมารยาท

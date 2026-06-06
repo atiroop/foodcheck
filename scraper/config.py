@@ -1,4 +1,5 @@
 """ค่าตั้งต้นส่วนกลางของ Thai FCD scraper."""
+import os
 from pathlib import Path
 
 BASE_URL = "https://inmu.mahidol.ac.th/thaifcd"
@@ -10,8 +11,8 @@ FOOD_NAME_URL = BASE_URL + "/foodsearch/food_name/"
 # path
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
-DB_PATH = DATA_DIR / "thaifcd.sqlite"
-SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
+DB_PATH = Path(os.getenv("DATABASE_PATH", DATA_DIR / "foodcheck.sqlite"))
+SCHEMA_PATH = Path(__file__).resolve().parent / "schema_complete.sql"
 
 # มารยาทต่อ server ต้นทาง: หน่วงระหว่าง request (วินาที)
 REQUEST_DELAY = 1.5
