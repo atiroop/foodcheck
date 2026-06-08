@@ -6,10 +6,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, Header
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import sqlite3
+
+from web.nutrition_sanity import run_nutrition_sanity_check
 
 ROOT_DIR = Path(__file__).parent.parent
 DEFAULT_DB_PATH = ROOT_DIR / "data" / "foodcheck.sqlite"
@@ -32,6 +34,13 @@ def get_db() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def is_admin_debug_enabled(admin_token: str = "", x_admin_token: str = "") -> bool:
+    expected = os.getenv("FOODCHECK_ADMIN_TOKEN", "")
+    if not expected:
+        return False
+    return admin_token == expected or x_admin_token == expected
 
 
 # ─────────────────────────────────────────────
@@ -83,7 +92,11 @@ def search(q: str = Query("", min_length=0), group: str = Query("")) -> dict:
 
 
 @app.get("/api/food/{food_id}")
-def food_detail(food_id: int) -> dict:
+def food_detail(
+    food_id: int,
+    admin_token: str = Query(""),
+    x_admin_token: str = Header("", alias="X-Admin-Token"),
+) -> dict:
     """ดึง nutrient ครบ 40 ตัวของอาหารชิ้นนั้น"""
     conn = get_db()
     food = conn.execute(
@@ -93,6 +106,7 @@ def food_detail(food_id: int) -> dict:
         (food_id,),
     ).fetchone()
     if not food:
+        conn.close()
         raise HTTPException(status_code=404, detail="ไม่พบรายการอาหาร")
 
     nutrients = conn.execute(
@@ -101,9 +115,18 @@ def food_detail(food_id: int) -> dict:
     ).fetchall()
     conn.close()
 
+    food_dict = dict(food)
+    nutrient_list = [dict(n) for n in nutrients]
+    sanity_check = run_nutrition_sanity_check(
+        food_dict,
+        nutrient_list,
+        include_debug=is_admin_debug_enabled(admin_token, x_admin_token),
+    )
+
     return {
-        "food": dict(food),
-        "nutrients": [dict(n) for n in nutrients],
+        "food": food_dict,
+        "nutrients": nutrient_list,
+        "sanity_check": sanity_check,
     }
 
 
@@ -118,14 +141,25 @@ def compare(ids: str = Query(..., description="food ids คั่นด้วย
     foods = []
     for fid in id_list:
         food = conn.execute(
-            "SELECT id, food_code, name_th, name_en, status FROM food WHERE id=?", (fid,)
+            """SELECT f.*, fg.name_en AS group_name
+               FROM food f LEFT JOIN food_group fg ON f.status = fg.status
+               WHERE f.id=?""",
+            (fid,),
         ).fetchone()
         if food:
             nutrients = conn.execute(
                 "SELECT nutrient_name, unit, per_100g FROM nutrient WHERE food_id=? ORDER BY rowid",
                 (fid,),
             ).fetchall()
-            foods.append({"food": dict(food), "nutrients": [dict(n) for n in nutrients]})
+            food_dict = dict(food)
+            nutrient_list = [dict(n) for n in nutrients]
+            foods.append(
+                {
+                    "food": food_dict,
+                    "nutrients": nutrient_list,
+                    "sanity_check": run_nutrition_sanity_check(food_dict, nutrient_list),
+                }
+            )
     conn.close()
     return {"items": foods}
 

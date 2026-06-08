@@ -62,6 +62,10 @@
             <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-lg" x-text="slot.food?.food_code"></span>
             <p class="text-sm font-semibold text-gray-900 mt-1 pr-6 leading-tight" x-text="slot.food?.name_th || slot.food?.name_en"></p>
             <p class="text-xs text-gray-400 truncate" x-text="slot.food?.name_en"></p>
+            <span x-show="slot.sanity && slot.sanity.status !== 'ok'"
+                  class="inline-flex mt-2 text-xs px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 border border-amber-200">
+              ตรวจสอบข้อมูล
+            </span>
           </div>
 
           <!-- Empty slot: search -->
@@ -156,6 +160,10 @@
                     <span class="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded" x-text="item.food.food_code"></span>
                     <div class="text-xs font-semibold text-gray-800 mt-1 leading-tight"
                          x-text="item.food.name_th || item.food.name_en"></div>
+                    <div x-show="item.sanity_check && item.sanity_check.status !== 'ok'"
+                         class="mt-1 text-[11px] text-amber-800 font-medium">
+                      ตรวจสอบข้อมูล
+                    </div>
                   </th>
                 </template>
               </tr>
@@ -216,10 +224,10 @@
     function compareApp() {
       return {
         slots: [
-          { food: null, query: '', suggestions: [], showDrop: false },
-          { food: null, query: '', suggestions: [], showDrop: false },
-          { food: null, query: '', suggestions: [], showDrop: false },
-          { food: null, query: '', suggestions: [], showDrop: false },
+          { food: null, sanity: null, query: '', suggestions: [], showDrop: false },
+          { food: null, sanity: null, query: '', suggestions: [], showDrop: false },
+          { food: null, sanity: null, query: '', suggestions: [], showDrop: false },
+          { food: null, sanity: null, query: '', suggestions: [], showDrop: false },
         ],
         compareData: [],
         loadingCompare: false,
@@ -251,6 +259,7 @@
           if (!res.ok) return;
           const data = await res.json();
           this.slots[slotIdx].food = data.food;
+          this.slots[slotIdx].sanity = data.sanity_check;
           await this.refreshCompare();
         },
 
@@ -265,6 +274,7 @@
 
         async selectFood(idx, item) {
           this.slots[idx].food = item;
+          this.slots[idx].sanity = null;
           this.slots[idx].query = '';
           this.slots[idx].showDrop = false;
           this.slots[idx].suggestions = [];
@@ -273,6 +283,7 @@
 
         async removeFood(idx) {
           this.slots[idx].food = null;
+          this.slots[idx].sanity = null;
           await this.refreshCompare();
         },
 
@@ -283,6 +294,10 @@
           const res = await fetch('/api/compare?ids=' + ids.join(','));
           const data = await res.json();
           this.compareData = data.items;
+          for (const item of this.compareData) {
+            const slot = this.slots.find(s => s.food && s.food.id === item.food.id);
+            if (slot) slot.sanity = item.sanity_check;
+          }
           this.buildMergedRows();
           this.loadingCompare = false;
         },
