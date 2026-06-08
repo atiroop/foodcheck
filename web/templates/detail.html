@@ -361,12 +361,22 @@
           return this.sanityCheck.flags.some(f => f.nutrient === key);
         },
 
-        calcVal(raw) {
+        numericValue(raw) {
           if (raw === null || raw === undefined || raw === '—' || raw === '-') return '—';
-          const num = parseFloat(raw);
+          const num = parseFloat(String(raw).replace(/,/g, ''));
+          return isNaN(num) ? raw : num;
+        },
+
+        calcVal(raw) {
+          const num = this.numericValue(raw);
+          if (num === '—') return '—';
           if (isNaN(num)) return raw;
           const val = num * this.weight / 100;
-          return val % 1 === 0 ? val.toFixed(0) : val.toFixed(2);
+          const formatted = val % 1 === 0 ? val.toFixed(0) : val.toFixed(2);
+          return Number(formatted).toLocaleString('en-US', {
+            minimumFractionDigits: val % 1 === 0 ? 0 : 2,
+            maximumFractionDigits: 2
+          });
         }
       }
     }

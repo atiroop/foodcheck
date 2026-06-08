@@ -1,6 +1,6 @@
 import unittest
 
-from web.nutrition_sanity import runNutritionSanityCheck, run_nutrition_sanity_check
+from web.nutrition_sanity import parse_number, runNutritionSanityCheck, run_nutrition_sanity_check
 
 
 def make_food(name_th="", name_en="", **nutrient_values):
@@ -33,6 +33,9 @@ def make_food(name_th="", name_en="", **nutrient_values):
 
 
 class NutritionSanityCheckTests(unittest.TestCase):
+    def test_parse_number_accepts_thousands_separator(self):
+        self.assertEqual(parse_number("9,272"), 9272)
+
     def test_fish_sauce_9mg_sodium_is_severe(self):
         result = runNutritionSanityCheck(make_food(name_th="น้ำปลา", sodium=9))
 
