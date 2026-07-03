@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS food (
     -- scraper tracking
     nutrient_fetched INTEGER NOT NULL DEFAULT 0,  -- 0=ยังไม่ดึง 1=สำเร็จ -1=error
     fetched_at      TEXT,
+    source          TEXT NOT NULL DEFAULT 'thaifcd_inmu',  -- แหล่งข้อมูล: 'thaifcd_inmu' | 'thaifcd_anamai'
     FOREIGN KEY (status) REFERENCES food_group(status)
 );
 
@@ -59,8 +60,37 @@ CREATE TABLE IF NOT EXISTS nutrient (
     sd              TEXT,
     footnote        TEXT,
     last_updated    TEXT,
+    source          TEXT NOT NULL DEFAULT 'thaifcd_inmu',  -- แหล่งข้อมูล: 'thaifcd_inmu' | 'thaifcd_anamai'
     PRIMARY KEY (food_id, nutrient_name),
     FOREIGN KEY (food_id) REFERENCES food(id)
+);
+
+-- =============================================================================
+-- SECTION 1B : กรมอนามัย (ANAMAI) — แหล่งข้อมูลใหม่
+-- =============================================================================
+-- เก็บแยกจาก food/nutrient ของ INMU เพราะใช้ fID (ข้อความ, zero-padded) แทน
+-- internal id ตัวเลข และมีโครงสร้างหมวดหมู่ nutrient ต่างกัน
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS anamai_food (
+    fid             TEXT PRIMARY KEY,        -- เช่น '07034'
+    name_th         TEXT,
+    name_en         TEXT,
+    food_group_th   TEXT,
+    food_group_en   TEXT,
+    food_type       TEXT,
+    nutrient_fetched INTEGER NOT NULL DEFAULT 0,  -- 0=ยังไม่ดึง 1=สำเร็จ -1=error
+    fetched_at      TEXT
+);
+
+CREATE TABLE IF NOT EXISTS anamai_nutrient (
+    fid             TEXT NOT NULL,
+    category        TEXT,                    -- 'Main nutrients' | 'Minerals' | 'Vitamins' | ...
+    nutrient_name   TEXT NOT NULL,
+    amount          REAL,
+    unit            TEXT,
+    PRIMARY KEY (fid, nutrient_name),
+    FOREIGN KEY (fid) REFERENCES anamai_food(fid)
 );
 
 -- =============================================================================
@@ -193,6 +223,11 @@ CREATE INDEX IF NOT EXISTS idx_food_name_en        ON food(name_en);
 
 CREATE INDEX IF NOT EXISTS idx_nutrient_food       ON nutrient(food_id);
 CREATE INDEX IF NOT EXISTS idx_nutrient_name       ON nutrient(nutrient_name);
+
+CREATE INDEX IF NOT EXISTS idx_anamai_food_fetched ON anamai_food(nutrient_fetched);
+CREATE INDEX IF NOT EXISTS idx_anamai_food_name_th ON anamai_food(name_th);
+CREATE INDEX IF NOT EXISTS idx_anamai_food_name_en ON anamai_food(name_en);
+CREATE INDEX IF NOT EXISTS idx_anamai_nutrient_fid ON anamai_nutrient(fid);
 
 CREATE INDEX IF NOT EXISTS idx_usda_map_thai       ON usda_food_mapping(thai_food_id);
 CREATE INDEX IF NOT EXISTS idx_usda_cache_fdc      ON usda_nutrient_cache(fdc_id);
