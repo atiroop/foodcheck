@@ -211,6 +211,33 @@ VALUES
     ('Sodium',                 'โซเดียม',        'mg',   5,          'high'),
     ('Moisture',               'น้ำ/ความชื้น',   'g',    6,          'high');
 
+-- แต่ละแหล่งข้อมูลเรียกชื่อ nutrient ต่างกัน (เช่น anamai ใช้ 'Water' ส่วน INMU ใช้
+-- 'Moisture') ตารางนี้ map ชื่อจริงของแต่ละแหล่ง → canonical name ที่ตรงกับ
+-- pd_nutrient.nutrient_name เพื่อให้ v_pd_nutrient join ได้ทั้งสองแหล่ง
+CREATE TABLE IF NOT EXISTS nutrient_name_map (
+    source          TEXT NOT NULL,          -- 'thaifcd_inmu' | 'thaifcd_anamai'
+    source_name     TEXT NOT NULL,          -- ชื่อ nutrient ตามต้นทาง
+    canonical_name  TEXT NOT NULL,          -- → pd_nutrient.nutrient_name
+    PRIMARY KEY (source, source_name),
+    FOREIGN KEY (canonical_name) REFERENCES pd_nutrient(nutrient_name)
+);
+
+INSERT OR IGNORE INTO nutrient_name_map (source, source_name, canonical_name) VALUES
+    ('thaifcd_inmu',   'Energy, by calculation', 'Energy, by calculation'),
+    ('thaifcd_inmu',   'Protein, total',         'Protein, total'),
+    ('thaifcd_inmu',   'Phosphorus',             'Phosphorus'),
+    ('thaifcd_inmu',   'Potassium',              'Potassium'),
+    ('thaifcd_inmu',   'Sodium',                 'Sodium'),
+    ('thaifcd_inmu',   'Moisture',               'Moisture'),
+    -- anamai: 'Energy'/'Total Energy' แยกกันตาม Foundation Foods vs Branded Food Products
+    ('thaifcd_anamai', 'Energy',                 'Energy, by calculation'),
+    ('thaifcd_anamai', 'Total Energy',           'Energy, by calculation'),
+    ('thaifcd_anamai', 'Protein',                'Protein, total'),
+    ('thaifcd_anamai', 'Phosphorus',             'Phosphorus'),
+    ('thaifcd_anamai', 'Potassium',              'Potassium'),
+    ('thaifcd_anamai', 'Sodium',                 'Sodium'),
+    ('thaifcd_anamai', 'Water',                  'Moisture');
+
 -- =============================================================================
 -- SECTION 6 : INDEXES
 -- =============================================================================
@@ -228,6 +255,8 @@ CREATE INDEX IF NOT EXISTS idx_anamai_food_fetched ON anamai_food(nutrient_fetch
 CREATE INDEX IF NOT EXISTS idx_anamai_food_name_th ON anamai_food(name_th);
 CREATE INDEX IF NOT EXISTS idx_anamai_food_name_en ON anamai_food(name_en);
 CREATE INDEX IF NOT EXISTS idx_anamai_nutrient_fid ON anamai_nutrient(fid);
+
+CREATE INDEX IF NOT EXISTS idx_nutrient_name_map_canonical ON nutrient_name_map(canonical_name);
 
 CREATE INDEX IF NOT EXISTS idx_usda_map_thai       ON usda_food_mapping(thai_food_id);
 CREATE INDEX IF NOT EXISTS idx_usda_cache_fdc      ON usda_nutrient_cache(fdc_id);
@@ -261,11 +290,20 @@ SELECT
 FROM food f
 JOIN nutrient n ON n.food_id = f.id;
 
--- View 2: เฉพาะ 6 ตัว PD-critical ของอาหารแต่ละตัว
---         พร้อมแหล่งที่มา (Thai FCD หรือ USDA cache)
-CREATE VIEW IF NOT EXISTS v_pd_nutrient AS
+-- View 2: เฉพาะ 6 ตัว PD-critical ของอาหารแต่ละตัว รวมทั้งสองแหล่ง (INMU + Anamai)
+--         พร้อมแหล่งที่มา (Thai FCD INMU / Thai FCD Anamai / USDA cache)
+--
+-- food_uid = 'thaifcd_inmu:<id>' หรือ 'thaifcd_anamai:<fid>' — ใช้แทน food_id เดิม
+-- เพราะ id ของสองแหล่งเป็นคนละ id space (INTEGER vs TEXT zero-padded)
+--
+-- DROP ก่อน CREATE เพราะ SQLite ไม่รองรับ CREATE OR REPLACE VIEW และ view เดิม
+-- (ถ้ามีอยู่แล้วจาก schema เก่า) จะไม่ถูกแก้ด้วย CREATE VIEW IF NOT EXISTS
+DROP VIEW IF EXISTS v_pd_nutrient;
+CREATE VIEW v_pd_nutrient AS
+-- แหล่ง 1: Thai FCD (INMU) — nutrient_name ตรงกับ pd_nutrient อยู่แล้ว ไม่ต้อง map
 SELECT
-    f.id            AS food_id,
+    'thaifcd_inmu:' || f.id AS food_uid,
+    f.source,
     f.food_code,
     f.name_th,
     f.name_en,
@@ -274,7 +312,6 @@ SELECT
     pd.unit,
     pd.sort_order,
     pd.risk_direction,
-    -- ค่าจาก Thai FCD ก่อน
     COALESCE(
         CASE WHEN n.per_100g IS NOT NULL
                   AND trim(n.per_100g) != '-'
@@ -283,12 +320,11 @@ SELECT
         -- fallback: ค่าจาก USDA cache ถ้า map ไว้แล้ว
         uc.per_100g
     )               AS value_per_100g,
-    -- แหล่งที่มาของค่า
     CASE
         WHEN n.per_100g IS NOT NULL
              AND trim(n.per_100g) != '-'
              AND lower(trim(n.deriv_by)) != 'not analysed'
-        THEN 'Thai FCD'
+        THEN 'Thai FCD (INMU)'
         WHEN uc.per_100g IS NOT NULL
         THEN 'USDA (fallback)'
         ELSE NULL
@@ -299,7 +335,38 @@ LEFT JOIN nutrient n
        ON n.food_id = f.id AND n.nutrient_name = pd.nutrient_name
 LEFT JOIN usda_food_mapping um ON um.thai_food_id = f.id
 LEFT JOIN usda_nutrient_cache uc
-       ON uc.fdc_id = um.fdc_id AND uc.nutrient_name = pd.nutrient_name;
+       ON uc.fdc_id = um.fdc_id AND uc.nutrient_name = pd.nutrient_name
+
+UNION ALL
+
+-- แหล่ง 2: Thai FCD (Anamai) — nutrient_name ต่างจาก canonical ต้องผ่าน nutrient_name_map
+--
+-- resolve ชื่อ canonical ก่อนใน subquery (an_canon) แล้วค่อย join กับ af × pd
+-- เพราะ canonical เดียวมีได้หลาย source_name (เช่น 'Energy'/'Total Energy' →
+-- 'Energy, by calculation') ถ้า join ตรงๆ กับ nutrient_name_map ใน CROSS JOIN
+-- จะเกิด fan-out ได้แถวซ้ำ
+SELECT
+    'thaifcd_anamai:' || af.fid AS food_uid,
+    'thaifcd_anamai' AS source,
+    af.fid          AS food_code,
+    af.name_th,
+    af.name_en,
+    pd.nutrient_name,
+    pd.display_name_th,
+    pd.unit,
+    pd.sort_order,
+    pd.risk_direction,
+    an_canon.amount AS value_per_100g,
+    CASE WHEN an_canon.amount IS NOT NULL THEN 'Thai FCD (Anamai)' ELSE NULL END AS value_source
+FROM anamai_food af
+CROSS JOIN pd_nutrient pd
+LEFT JOIN (
+    SELECT an.fid, map.canonical_name, an.amount
+    FROM anamai_nutrient an
+    JOIN nutrient_name_map map
+         ON map.source = 'thaifcd_anamai' AND map.source_name = an.nutrient_name
+) an_canon
+       ON an_canon.fid = af.fid AND an_canon.canonical_name = pd.nutrient_name;
 
 -- View 3: คำนวณโภชนาการของ recipe (รวม ingredient ตาม amount_g)
 CREATE VIEW IF NOT EXISTS v_recipe_nutrition AS
@@ -355,7 +422,7 @@ GROUP BY ri.recipe_id, pd.nutrient_name;
 --
 -- Query ที่ใช้บ่อย:
 --   ค้นหาอาหาร:   SELECT * FROM food WHERE name_th LIKE '%หมู%'
---   ค่า PD:        SELECT * FROM v_pd_nutrient WHERE food_id = ?
+--   ค่า PD:        SELECT * FROM v_pd_nutrient WHERE food_uid = 'thaifcd_inmu:129'
 --   ค่า recipe:    SELECT * FROM v_recipe_nutrition WHERE recipe_id = ?
 --   ค่าขาดทั้งหมด: SELECT * FROM v_food_nutrient WHERE is_missing = 1
 -- =============================================================================

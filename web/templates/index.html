@@ -46,7 +46,7 @@
     <!-- Hero -->
     <div class="text-center mb-8">
       <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">ค้นหาข้อมูลโภชนาการ</h1>
-      <p class="text-gray-500 text-base">อาหารไทย 1,781 รายการ — ข้อมูลจากสถาบันโภชนาการ ม.มหิดล</p>
+      <p class="text-gray-500 text-base">อาหารไทยกว่า 3,000 รายการ — ข้อมูลจาก INMU มหิดล และกรมอนามัย</p>
     </div>
 
     <!-- Search Box -->
@@ -87,10 +87,13 @@
                  class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors min-h-[52px]">
                 <span class="text-xs bg-primary/10 text-primary font-medium px-2 py-1 rounded-lg mt-0.5 flex-shrink-0"
                       x-text="item.food_code"></span>
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                   <div class="font-medium text-gray-900 text-base truncate" x-text="item.name_th || item.name_en"></div>
                   <div class="text-sm text-gray-500 truncate" x-text="item.name_en"></div>
                 </div>
+                <span class="text-[10px] font-medium px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0"
+                      :class="item.source === 'thaifcd_anamai' ? 'bg-emerald-50 text-emerald-700' : 'bg-sky-50 text-sky-700'"
+                      x-text="item.source === 'thaifcd_anamai' ? 'กรมอนามัย' : 'INMU'"></span>
               </a>
             </template>
           </div>
@@ -123,7 +126,9 @@
              class="block bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md cursor-pointer transition-shadow">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs bg-primary/10 text-primary font-medium px-2 py-1 rounded-lg" x-text="item.food_code"></span>
-              <span class="text-xs text-gray-400" x-text="item.status"></span>
+              <span class="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                    :class="item.source === 'thaifcd_anamai' ? 'bg-emerald-50 text-emerald-700' : 'bg-sky-50 text-sky-700'"
+                    x-text="item.source === 'thaifcd_anamai' ? 'กรมอนามัย' : 'INMU'"></span>
             </div>
             <div class="font-semibold text-gray-900 text-base" x-text="item.name_th || item.name_en"></div>
             <div class="text-sm text-gray-500 mb-3" x-text="item.name_en"></div>
@@ -160,6 +165,7 @@
             <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
               <tr>
                 <th class="text-left px-4 py-3 font-medium">ชื่ออาหาร</th>
+                <th class="text-left px-2 py-3 font-medium">แหล่งข้อมูล</th>
                 <th class="text-right px-3 py-3 font-medium">พลังงาน<br><span class="font-normal normal-case">(kcal)</span></th>
                 <th class="text-right px-3 py-3 font-medium">โปรตีน<br><span class="font-normal normal-case">(g)</span></th>
                 <th class="text-right px-3 py-3 font-medium text-yellow-700">P<br><span class="font-normal normal-case">(mg)</span></th>
@@ -174,6 +180,11 @@
                   <td class="px-4 py-3">
                     <div class="font-medium text-gray-900" x-text="item.name_th || item.name_en"></div>
                     <div class="text-xs text-gray-400" x-text="item.food_code + ' · ' + (item.name_en || '')"></div>
+                  </td>
+                  <td class="px-2 py-3">
+                    <span class="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                          :class="item.source === 'thaifcd_anamai' ? 'bg-emerald-50 text-emerald-700' : 'bg-sky-50 text-sky-700'"
+                          x-text="item.source === 'thaifcd_anamai' ? 'กรมอนามัย' : 'INMU'"></span>
                   </td>
                   <td class="px-3 py-3 text-right text-gray-700" x-text="item.energy ?? '—'"></td>
                   <td class="px-3 py-3 text-right text-gray-700" x-text="item.protein ?? '—'"></td>
@@ -209,7 +220,7 @@
   <footer class="mt-8 bg-white border-t border-gray-200 py-6 px-4">
     <div class="max-w-4xl mx-auto text-center text-sm text-gray-500 space-y-1">
       <p>ข้อมูลโภชนาการจาก <strong class="text-gray-700">Thai Food Composition Database (Thai FCD)</strong></p>
-      <p>สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU) — เพื่อการศึกษาและไม่ใช่เชิงพาณิชย์</p>
+      <p>สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU) และ กรมอนามัย กระทรวงสาธารณสุข — เพื่อการศึกษาและไม่ใช่เชิงพาณิชย์</p>
       <p class="text-xs text-gray-400 pt-1">ค่าโภชนาการเป็นค่าเฉลี่ยต่อ 100 กรัม</p>
     </div>
   </footer>

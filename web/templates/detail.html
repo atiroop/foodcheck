@@ -262,8 +262,8 @@
         </div>
       </div>
 
-      <!-- Compare button -->
-      <div class="mt-4 flex gap-3">
+      <!-- Compare button (ยังไม่รองรับข้อมูลกรมอนามัย) -->
+      <div x-show="food?.source !== 'thaifcd_anamai'" class="mt-4 flex gap-3">
         <a :href="'/compare?ids=' + foodId"
            class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-primary text-white px-5 py-3 rounded-xl font-medium hover:bg-primary-dark transition-colors cursor-pointer min-h-[52px]">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -276,7 +276,9 @@
       <!-- Disclaimer -->
       <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-xl p-4">
         <p class="text-sm text-yellow-700">
-          <strong>หมายเหตุ:</strong> ค่าโภชนาการเป็นค่าเฉลี่ยจากฐานข้อมูล INMU ไม่ใช่คำแนะนำเฉพาะบุคคล
+          <strong>หมายเหตุ:</strong> ค่าโภชนาการเป็นค่าเฉลี่ยจาก
+          <span x-text="food?.source === 'thaifcd_anamai' ? 'ฐานข้อมูลกรมอนามัย' : 'ฐานข้อมูล INMU'"></span>
+          ไม่ใช่คำแนะนำเฉพาะบุคคล
           ผู้ป่วยล้างไตทางช่องท้องควรปรึกษาแพทย์หรือนักโภชนาการประจำตัวก่อนปรับอาหาร
         </p>
       </div>
@@ -287,8 +289,9 @@
   <!-- Footer -->
   <footer class="mt-8 bg-white border-t border-gray-200 py-6 px-4">
     <div class="max-w-4xl mx-auto text-center text-sm text-gray-500 space-y-1">
-      <p>ข้อมูลจาก <strong class="text-gray-700">Thai FCD</strong> — สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU)</p>
-      <p class="text-xs text-gray-400">ใช้เพื่อการศึกษา ไม่ใช่เชิงพาณิชย์</p>
+      <p>ข้อมูลโภชนาการจาก <strong class="text-gray-700">Thai Food Composition Database (Thai FCD)</strong></p>
+      <p>สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU) และ กรมอนามัย กระทรวงสาธารณสุข — เพื่อการศึกษาและไม่ใช่เชิงพาณิชย์</p>
+      <p class="text-xs text-gray-400 pt-1">ค่าโภชนาการเป็นค่าเฉลี่ยต่อ 100 กรัม</p>
     </div>
   </footer>
 

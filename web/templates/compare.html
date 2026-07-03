@@ -266,7 +266,8 @@
         async searchSlot(idx) {
           const q = this.slots[idx].query.trim();
           if (q.length < 2) { this.slots[idx].suggestions = []; return; }
-          const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+          // จำกัดเฉพาะ INMU — เปรียบเทียบยังไม่รองรับข้อมูลกรมอนามัย
+          const res = await fetch('/api/search?source=thaifcd_inmu&q=' + encodeURIComponent(q));
           const data = await res.json();
           this.slots[idx].suggestions = data.results.slice(0, 10);
           this.slots[idx].showDrop = true;
