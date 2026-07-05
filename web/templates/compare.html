@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>เปรียบเทียบอาหาร — FoodCheck</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="/static/unit_conversion.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -17,13 +18,13 @@
     .numeric-value { color: #111827; font-weight: 600; }
   </style>
   <script>
-    tailwind.config = { theme: { extend: { colors: { primary: '#0891B2', 'primary-dark': '#0E7490', accent: '#059669' } } } }
+    tailwind.config = { theme: { extend: { colors: { primary: '#EA580C', 'primary-dark': '#C2410C', accent: '#65A30D', cream: '#FFFBF5' } } } }
   </script>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+<body class="bg-cream text-stone-800 min-h-screen">
 
   <!-- Navbar -->
-  <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
+  <nav class="bg-white border-b border-stone-200 sticky top-0 z-30">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2 font-bold text-primary text-lg">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -31,21 +32,31 @@
         </svg>
         FoodCheck
       </a>
-      <span class="text-sm font-medium text-gray-700">เปรียบเทียบอาหาร</span>
+      <span class="text-sm font-medium text-stone-700">เปรียบเทียบอาหาร</span>
     </div>
   </nav>
+
+  <!-- Source attribution — always visible near the top, not buried in the footer -->
+  <div class="bg-orange-50 border-b border-orange-100">
+    <div class="max-w-5xl mx-auto px-4 py-2 flex items-center gap-2 text-xs sm:text-sm text-orange-900">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>
+      </svg>
+      <span>ข้อมูลโภชนาการจาก <strong class="font-semibold">Thai Food Composition Database (INMU มหิดล)</strong> และ <strong class="font-semibold">กรมอนามัย</strong> — เพื่อการศึกษา ไม่ใช่เชิงพาณิชย์</span>
+    </div>
+  </div>
 
   <main class="max-w-5xl mx-auto px-4 py-6" x-data="compareApp()" x-init="init()">
 
     <!-- Back -->
-    <a href="/" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-4 cursor-pointer transition-colors min-h-[44px]">
+    <a href="/" class="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-primary mb-4 cursor-pointer transition-colors min-h-[44px]">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="m15 18-6-6 6-6"/>
       </svg>
       กลับหน้าค้นหา
     </a>
 
-    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">เปรียบเทียบอาหาร (สูงสุด 4 รายการ)</h1>
+    <h1 class="text-xl sm:text-2xl font-bold text-stone-900 mb-6">เปรียบเทียบอาหาร (สูงสุด 4 รายการ)</h1>
 
     <!-- Food Picker Row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
@@ -54,14 +65,14 @@
           <!-- Filled slot -->
           <div x-show="slot.food" class="bg-white border-2 border-primary/30 rounded-xl p-3 relative">
             <button @click="removeFood(idx)"
-                    class="absolute top-2 right-2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 cursor-pointer transition-colors">
+                    class="absolute top-2 right-2 w-7 h-7 flex items-center justify-center text-stone-400 hover:text-red-500 cursor-pointer transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             </button>
             <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-lg" x-text="slot.food?.food_code"></span>
-            <p class="text-sm font-semibold text-gray-900 mt-1 pr-6 leading-tight" x-text="slot.food?.name_th || slot.food?.name_en"></p>
-            <p class="text-xs text-gray-400 truncate" x-text="slot.food?.name_en"></p>
+            <p class="text-sm font-semibold text-stone-900 mt-1 pr-6 leading-tight" x-text="slot.food?.name_th || slot.food?.name_en"></p>
+            <p class="text-xs text-stone-400 truncate" x-text="slot.food?.name_en"></p>
             <span x-show="slot.sanity && slot.sanity.status !== 'ok'"
                   class="inline-flex mt-2 text-xs px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 border border-amber-200">
               ตรวจสอบข้อมูล
@@ -78,16 +89,16 @@
               @keydown.escape="slot.showDrop = false"
               @focus="if(slot.suggestions.length) slot.showDrop = true"
               autocomplete="off"
-              class="w-full border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-0 bg-white min-h-[52px]">
+              class="w-full border-2 border-dashed border-stone-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-0 bg-white min-h-[52px]">
 
             <div x-show="slot.showDrop && slot.suggestions.length > 0"
                  @click.away="slot.showDrop = false"
-                 class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 search-dropdown">
+                 class="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-20 search-dropdown">
               <template x-for="item in slot.suggestions" :key="item.id">
                 <div @click="selectFood(idx, item)"
-                     class="px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors">
+                     class="px-3 py-2.5 hover:bg-stone-50 cursor-pointer border-b border-stone-100 last:border-0 transition-colors">
                   <span class="text-xs text-primary font-medium" x-text="item.food_code + ' '"></span>
-                  <span class="text-sm text-gray-800" x-text="item.name_th || item.name_en"></span>
+                  <span class="text-sm text-stone-800" x-text="item.name_th || item.name_en"></span>
                 </div>
               </template>
             </div>
@@ -97,7 +108,7 @@
     </div>
 
     <!-- Loading -->
-    <div x-show="loadingCompare" class="text-center py-12 text-gray-400">
+    <div x-show="loadingCompare" class="text-center py-12 text-stone-400">
       <svg class="animate-spin w-8 h-8 mx-auto mb-2 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
@@ -108,38 +119,48 @@
     <!-- Comparison Table -->
     <div x-show="!loadingCompare && compareData.length >= 2">
 
-      <!-- Weight adjuster -->
-      <div class="bg-white border border-gray-200 rounded-xl p-4 mb-4 flex flex-wrap items-center gap-4">
-        <span class="text-sm font-medium text-gray-700">น้ำหนักที่กิน:</span>
-        <div class="flex items-center gap-2">
-          <button @click="weight = Math.max(10, weight - 10)"
-                  class="w-9 h-9 border border-gray-300 rounded-lg text-lg font-bold text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors flex items-center justify-center">−</button>
-          <input type="number" x-model.number="weight" min="10" max="2000" step="10"
-                 class="w-20 text-center border border-gray-300 rounded-lg px-2 py-1.5 text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary">
-          <button @click="weight = Math.min(2000, weight + 10)"
-                  class="w-9 h-9 border border-gray-300 rounded-lg text-lg font-bold text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors flex items-center justify-center">+</button>
-          <span class="text-sm text-gray-500">กรัม</span>
+      <!-- Amount / unit adjuster -->
+      <div class="bg-white border border-stone-200 rounded-xl p-4 mb-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <span class="text-sm font-medium text-stone-700">ปริมาณที่กิน:</span>
+          <div class="flex items-center gap-2">
+            <button @click="amount = unitsApi.round(Math.max(0.01, amount - unitsApi.stepFor(unit)), 4)"
+                    class="w-9 h-9 border border-stone-300 rounded-lg text-lg font-bold text-stone-600 hover:bg-stone-100 cursor-pointer transition-colors flex items-center justify-center">−</button>
+            <input type="number" x-model.number="amount" min="0.01" :step="unitsApi.stepFor(unit)"
+                   class="w-20 text-center border border-stone-300 rounded-lg px-2 py-1.5 text-base font-bold focus:outline-none focus:ring-2 focus:ring-primary">
+            <button @click="amount = unitsApi.round(amount + unitsApi.stepFor(unit), 4)"
+                    class="w-9 h-9 border border-stone-300 rounded-lg text-lg font-bold text-stone-600 hover:bg-stone-100 cursor-pointer transition-colors flex items-center justify-center">+</button>
+          </div>
+          <select x-model="unit"
+                  class="border border-stone-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer min-h-[38px]">
+            <template x-for="u in unitOptions" :key="u.code">
+              <option :value="u.code" x-text="u.label"></option>
+            </template>
+          </select>
         </div>
+        <p x-show="hasUnavailable()" class="text-xs text-stone-400 mt-2">
+          รายการที่ไม่มีข้อมูลความหนาแน่น (density) สำหรับหน่วยนี้จะแสดงเป็น “—”
+        </p>
       </div>
 
       <!-- Mobile: card per nutrient -->
       <div class="sm:hidden space-y-2">
         <template x-for="row in mergedRows" :key="row.name">
-          <div :class="pdNames.includes(row.name) ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-200'"
+          <div :class="pdNames.includes(row.name) ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-stone-200'"
                class="border rounded-xl p-3">
             <div class="flex items-center gap-2 mb-2">
               <span x-show="pdNames.includes(row.name)" class="w-2 h-2 bg-yellow-400 rounded-full"></span>
-              <span class="text-sm font-medium text-gray-800" x-text="row.name"></span>
-              <span class="text-xs text-gray-400" x-text="row.unit"></span>
+              <span class="text-sm font-medium text-stone-800" x-text="row.name"></span>
+              <span class="text-xs text-stone-400" x-text="row.unit"></span>
             </div>
             <div class="grid gap-1" :style="'grid-template-columns: repeat(' + compareData.length + ', 1fr)'">
               <template x-for="(val, i) in row.values" :key="i">
                 <div class="text-center">
-                  <div class="text-xs text-gray-400 mb-0.5 truncate"
+                  <div class="text-xs text-stone-400 mb-0.5 truncate"
                        x-text="compareData[i]?.food.name_th?.slice(0,8) || compareData[i]?.food.name_en?.slice(0,8)"></div>
                   <div class="font-semibold text-sm"
                        :class="getClass(row.values, i)"
-                       x-text="calcVal(val)"></div>
+                       x-text="calcVal(val, i)"></div>
                 </div>
               </template>
             </div>
@@ -148,17 +169,17 @@
       </div>
 
       <!-- Desktop: table -->
-      <div class="hidden sm:block bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      <div class="hidden sm:block bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-200">
+            <thead class="bg-stone-50 border-b border-stone-200">
               <tr>
-                <th class="text-left px-4 py-3 font-medium text-gray-600 w-44">สารอาหาร</th>
-                <th class="text-center px-2 py-3 font-medium text-gray-600 text-xs">หน่วย</th>
+                <th class="text-left px-4 py-3 font-medium text-stone-600 w-44">สารอาหาร</th>
+                <th class="text-center px-2 py-3 font-medium text-stone-600 text-xs">หน่วย</th>
                 <template x-for="(item, i) in compareData" :key="i">
                   <th class="text-center px-3 py-3 min-w-[120px]">
                     <span class="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded" x-text="item.food.food_code"></span>
-                    <div class="text-xs font-semibold text-gray-800 mt-1 leading-tight"
+                    <div class="text-xs font-semibold text-stone-800 mt-1 leading-tight"
                          x-text="item.food.name_th || item.food.name_en"></div>
                     <div x-show="item.sanity_check && item.sanity_check.status !== 'ok'"
                          class="mt-1 text-[11px] text-amber-800 font-medium">
@@ -168,18 +189,18 @@
                 </template>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-stone-100">
               <template x-for="row in mergedRows" :key="row.name">
-                <tr :class="pdNames.includes(row.name) ? 'bg-yellow-50' : 'hover:bg-gray-50'">
-                  <td class="px-4 py-2.5 text-gray-800 flex items-center gap-2">
+                <tr :class="pdNames.includes(row.name) ? 'bg-yellow-50' : 'hover:bg-stone-50'">
+                  <td class="px-4 py-2.5 text-stone-800 flex items-center gap-2">
                     <span x-show="pdNames.includes(row.name)" class="w-2 h-2 bg-yellow-400 rounded-full flex-shrink-0"></span>
                     <span x-text="row.name"></span>
                   </td>
-                  <td class="px-2 py-2.5 text-center text-xs text-gray-400" x-text="row.unit"></td>
+                  <td class="px-2 py-2.5 text-center text-xs text-stone-400" x-text="row.unit"></td>
                   <template x-for="(val, i) in row.values" :key="i">
                     <td class="px-3 py-2.5 text-center"
                         :class="getClass(row.values, i)"
-                        x-text="calcVal(val)">
+                        x-text="calcVal(val, i)">
                     </td>
                   </template>
                 </tr>
@@ -187,19 +208,19 @@
             </tbody>
           </table>
         </div>
-        <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
-          <span>แสดงตัวเลขตามน้ำหนักที่เลือกเพื่อใช้เปรียบเทียบ ไม่ใช่คำแนะนำเฉพาะบุคคล</span>
+        <div class="px-4 py-2 bg-stone-50 border-t border-stone-100 text-xs text-stone-400">
+          <span>แสดงตัวเลขตามปริมาณที่เลือกเพื่อใช้เปรียบเทียบ ไม่ใช่คำแนะนำเฉพาะบุคคล</span>
         </div>
       </div>
 
     </div>
 
     <!-- Empty state -->
-    <div x-show="!loadingCompare && compareData.length < 2" class="text-center py-16 text-gray-400">
+    <div x-show="!loadingCompare && compareData.length < 2" class="text-center py-16 text-stone-400">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 mx-auto mb-3 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <path d="M8 3H2v13h6"/><path d="M22 8H8v13h14z"/>
       </svg>
-      <p class="text-base font-medium text-gray-500">เลือกอาหารอย่างน้อย 2 รายการเพื่อเปรียบเทียบ</p>
+      <p class="text-base font-medium text-stone-500">เลือกอาหารอย่างน้อย 2 รายการเพื่อเปรียบเทียบ</p>
     </div>
 
     <!-- Disclaimer -->
@@ -213,10 +234,10 @@
   </main>
 
   <!-- Footer -->
-  <footer class="mt-8 bg-white border-t border-gray-200 py-6 px-4">
-    <div class="max-w-5xl mx-auto text-center text-sm text-gray-500 space-y-1">
-      <p>ข้อมูลจาก <strong class="text-gray-700">Thai FCD</strong> — สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU)</p>
-      <p class="text-xs text-gray-400">ใช้เพื่อการศึกษา ไม่ใช่เชิงพาณิชย์</p>
+  <footer class="mt-8 bg-white border-t border-stone-200 py-6 px-4">
+    <div class="max-w-5xl mx-auto text-center text-sm text-stone-500 space-y-1">
+      <p>ข้อมูลจาก <strong class="text-stone-700">Thai FCD</strong> — สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU)</p>
+      <p class="text-xs text-stone-400">ใช้เพื่อการศึกษา ไม่ใช่เชิงพาณิชย์</p>
     </div>
   </footer>
 
@@ -231,7 +252,10 @@
         ],
         compareData: [],
         loadingCompare: false,
-        weight: 100,
+        amount: 100,
+        unit: 'g',
+        unitsApi: window.FoodCheckUnits,
+        unitOptions: window.FoodCheckUnits.defaultConversions().units,
         pdNames: [
           'Energy, by calculation',
           'Protein, total',
@@ -242,7 +266,13 @@
         ],
         mergedRows: [],
 
+        defaultAmountForUnit(code) {
+          return { g: 100, kg: 1, oz: 4, ml: 100, l: 1, tsp: 1, tbsp: 1, cup: 1 }[code] ?? 1;
+        },
+
         async init() {
+          this.$watch('unit', (newUnit) => { this.amount = this.defaultAmountForUnit(newUnit); });
+
           // ดึง ids จาก URL query string
           const params = new URLSearchParams(window.location.search);
           const idsParam = params.get('ids');
@@ -332,11 +362,22 @@
           return isNaN(num) ? raw : num;
         },
 
-        calcVal(raw) {
+        gramsFor(i) {
+          const conv = this.compareData[i]?.unit_conversions;
+          return this.unitsApi.gramsFor(this.amount, this.unit, conv);
+        },
+
+        hasUnavailable() {
+          return this.compareData.some((_, i) => this.gramsFor(i) === null);
+        },
+
+        calcVal(raw, i) {
           const num = this.numericValue(raw);
           if (num === '—') return '—';
           if (isNaN(num)) return raw;
-          const val = num * this.weight / 100;
+          const grams = this.gramsFor(i);
+          if (grams === null) return '—';
+          const val = num * grams / 100;
           const formatted = val % 1 === 0 ? val.toFixed(0) : val.toFixed(2);
           return Number(formatted).toLocaleString('en-US', {
             minimumFractionDigits: val % 1 === 0 ? 0 : 2,

@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import sqlite3
 
-from web.household_measures import get_household_measures
+from web.unit_conversion import get_unit_conversions
 from web.nutrition_sanity import run_nutrition_sanity_check
 
 ROOT_DIR = Path(__file__).parent.parent
@@ -195,7 +195,7 @@ def food_detail(
             "food": food_dict,
             "nutrients": nutrient_list,
             "sanity_check": sanity_check,
-            "household_measures": get_household_measures(food_dict, nutrient_list),
+            "unit_conversions": get_unit_conversions(food_dict, nutrient_list),
         }
 
     try:
@@ -232,7 +232,7 @@ def food_detail(
         "food": food_dict,
         "nutrients": nutrient_list,
         "sanity_check": sanity_check,
-        "household_measures": get_household_measures(food_dict, nutrient_list),
+        "unit_conversions": get_unit_conversions(food_dict, nutrient_list),
     }
 
 
@@ -264,7 +264,7 @@ def compare(ids: str = Query(..., description="food ids คั่นด้วย
                     "food": food_dict,
                     "nutrients": nutrient_list,
                     "sanity_check": run_nutrition_sanity_check(food_dict, nutrient_list),
-                    "household_measures": get_household_measures(food_dict, nutrient_list),
+                    "unit_conversions": get_unit_conversions(food_dict, nutrient_list),
                 }
             )
     conn.close()

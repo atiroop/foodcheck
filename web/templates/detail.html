@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>รายละเอียดอาหาร — FoodCheck</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="/static/unit_conversion.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -15,13 +16,13 @@
     ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
   </style>
   <script>
-    tailwind.config = { theme: { extend: { colors: { primary: '#0891B2', 'primary-dark': '#0E7490', accent: '#059669' } } } }
+    tailwind.config = { theme: { extend: { colors: { primary: '#EA580C', 'primary-dark': '#C2410C', accent: '#65A30D', cream: '#FFFBF5' } } } }
   </script>
 </head>
-<body class="bg-gray-50 text-gray-800 min-h-screen">
+<body class="bg-cream text-stone-800 min-h-screen">
 
   <!-- Navbar -->
-  <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
+  <nav class="bg-white border-b border-stone-200 sticky top-0 z-30">
     <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2 font-bold text-primary text-lg">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -29,7 +30,7 @@
         </svg>
         FoodCheck
       </a>
-      <a href="/compare" class="flex items-center gap-1 text-sm text-gray-600 hover:text-primary transition-colors min-h-[44px] px-2 cursor-pointer">
+      <a href="/compare" class="flex items-center gap-1 text-sm text-stone-600 hover:text-primary transition-colors min-h-[44px] px-2 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M8 3H2v13h6"/><path d="M22 8H8v13h14z"/>
         </svg>
@@ -38,10 +39,20 @@
     </div>
   </nav>
 
+  <!-- Source attribution — always visible near the top, not buried in the footer -->
+  <div class="bg-orange-50 border-b border-orange-100">
+    <div class="max-w-4xl mx-auto px-4 py-2 flex items-center gap-2 text-xs sm:text-sm text-orange-900">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/>
+      </svg>
+      <span>ข้อมูลโภชนาการจาก <strong class="font-semibold">Thai Food Composition Database (INMU มหิดล)</strong> และ <strong class="font-semibold">กรมอนามัย</strong> — เพื่อการศึกษา ไม่ใช่เชิงพาณิชย์</span>
+    </div>
+  </div>
+
   <main class="max-w-4xl mx-auto px-4 py-6" x-data="detailApp()" x-init="load()">
 
     <!-- Back -->
-    <a href="/" class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-primary mb-4 cursor-pointer transition-colors min-h-[44px]">
+    <a href="/" class="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-primary mb-4 cursor-pointer transition-colors min-h-[44px]">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="m15 18-6-6 6-6"/>
       </svg>
@@ -49,7 +60,7 @@
     </a>
 
     <!-- Loading state -->
-    <div x-show="loading" class="text-center py-20 text-gray-400">
+    <div x-show="loading" class="text-center py-20 text-stone-400">
       <svg class="animate-spin w-10 h-10 mx-auto mb-3 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
@@ -61,60 +72,48 @@
     <div x-show="!loading && food">
 
       <!-- Food Header -->
-      <div class="bg-white border border-gray-200 rounded-xl p-5 mb-4 shadow-sm">
+      <div class="bg-white border border-stone-200 rounded-xl p-5 mb-4 shadow-sm">
         <div class="flex items-start justify-between gap-3 mb-3">
           <div>
             <div class="text-xs bg-primary/10 text-primary font-medium px-2 py-1 rounded-lg inline-block mb-2"
                  x-text="food?.food_code"></div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 leading-snug" x-text="food?.name_th || food?.name_en"></h1>
-            <p class="text-gray-500 mt-1" x-text="food?.name_en"></p>
-            <p x-show="food?.scientific_name" class="text-sm text-gray-400 italic mt-0.5" x-text="food?.scientific_name"></p>
+            <h1 class="text-xl sm:text-2xl font-bold text-stone-900 leading-snug" x-text="food?.name_th || food?.name_en"></h1>
+            <p class="text-stone-500 mt-1" x-text="food?.name_en"></p>
+            <p x-show="food?.scientific_name" class="text-sm text-stone-400 italic mt-0.5" x-text="food?.scientific_name"></p>
           </div>
         </div>
 
-        <!-- Weight adjuster -->
-        <div class="bg-gray-50 rounded-xl p-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">
-            ปรับน้ำหนักที่กิน (กรัม)
+        <!-- Amount / unit adjuster -->
+        <div class="bg-stone-50 rounded-xl p-4">
+          <label class="block text-sm font-medium text-stone-700 mb-2">
+            ปรับปริมาณที่กิน
           </label>
-          <div class="flex items-center gap-3">
-            <button @click="weight = Math.max(10, weight - 10)"
-                    class="w-11 h-11 bg-white border border-gray-300 rounded-xl text-xl font-bold text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors flex items-center justify-center">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button @click="amount = unitsApi.round(Math.max(0.01, amount - unitsApi.stepFor(unit)), 4)"
+                    class="w-11 h-11 bg-white border border-stone-300 rounded-xl text-xl font-bold text-stone-600 hover:bg-stone-100 cursor-pointer transition-colors flex items-center justify-center flex-shrink-0">
               −
             </button>
-            <input type="number" x-model.number="weight" min="10" max="2000" step="10"
-                   class="w-24 text-center border border-gray-300 rounded-xl px-3 py-2 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-primary">
-            <button @click="weight = Math.min(2000, weight + 10)"
-                    class="w-11 h-11 bg-white border border-gray-300 rounded-xl text-xl font-bold text-gray-600 hover:bg-gray-100 cursor-pointer transition-colors flex items-center justify-center">
+            <input type="number" x-model.number="amount" min="0.01" :step="unitsApi.stepFor(unit)"
+                   class="w-24 text-center border border-stone-300 rounded-xl px-3 py-2 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-primary">
+            <button @click="amount = unitsApi.round(amount + unitsApi.stepFor(unit), 4)"
+                    class="w-11 h-11 bg-white border border-stone-300 rounded-xl text-xl font-bold text-stone-600 hover:bg-stone-100 cursor-pointer transition-colors flex items-center justify-center flex-shrink-0">
               +
             </button>
-            <span class="text-gray-500 text-base">กรัม</span>
+            <select x-model="unit"
+                    class="border border-stone-300 rounded-xl px-3 py-2 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer min-h-[44px]">
+              <template x-for="u in unitConversions.units" :key="u.code">
+                <option :value="u.code" :disabled="!u.available" x-text="u.label"></option>
+              </template>
+            </select>
           </div>
-          <p class="text-xs text-gray-400 mt-2">ค่าเดิมเป็น 100 กรัม — ปรับตัวเลขเพื่อคำนวณตามน้ำหนักจริง</p>
-
-          <div x-show="householdMeasures.available" class="mt-4 border-t border-gray-200 pt-3">
-            <p class="text-sm font-medium text-gray-700 mb-2">ปริมาณครัวเรือนโดยประมาณ</p>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <tbody class="divide-y divide-gray-200">
-                  <template x-for="m in householdMeasures.measures" :key="m.label">
-                    <tr>
-                      <td class="py-2 text-gray-700" x-text="m.label"></td>
-                      <td class="py-2 text-right font-semibold text-gray-900"
-                          x-text="formatGrams(m.grams) + ' กรัม'"></td>
-                      <td class="py-2 text-right">
-                        <button @click="weight = m.grams"
-                                class="text-xs text-primary hover:text-primary-dark font-medium min-h-[32px] px-2 cursor-pointer">
-                          ใช้ค่านี้
-                        </button>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-            <p class="text-xs text-gray-400 mt-2" x-text="householdMeasures.note"></p>
-          </div>
+          <p class="text-xs text-stone-400 mt-2">
+            ค่าเดิมของฐานข้อมูลเป็น 100 กรัม —
+            <span x-show="unit !== 'g'">เทียบเท่าประมาณ <strong x-text="formatGrams(grams)"></strong> กรัม —</span>
+            เลือกหน่วยและใส่ปริมาณเพื่อคำนวณ
+          </p>
+          <p x-show="!unitConversions.density_available" class="text-xs text-stone-400 mt-1">
+            หน่วยตวง (มล./ลิตร/ช้อนชา/ช้อนโต๊ะ/ถ้วยตวง) ใช้ไม่ได้กับอาหารรายการนี้ เพราะไม่มีข้อมูลความหนาแน่น (density) ในฐานข้อมูล
+          </p>
         </div>
       </div>
 
@@ -190,45 +189,45 @@
             <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           สารอาหารที่ผู้ป่วย PD ต้องระวัง
-          <span class="text-yellow-600 font-normal" x-text="'(ต่อ ' + weight + ' ก.)'"></span>
+          <span class="text-yellow-600 font-normal" x-text="'(ต่อ ' + amount + ' ' + unitsApi.shortLabel(unit) + ')'"></span>
         </p>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <template x-for="n in pdNutrients" :key="n.name">
             <div class="bg-white border border-yellow-200 rounded-xl p-3 text-center">
-              <div class="text-xs text-gray-500 mb-1 flex items-center justify-center gap-1">
+              <div class="text-xs text-stone-500 mb-1 flex items-center justify-center gap-1">
                 <span x-text="n.label"></span>
                 <span x-show="hasNutrientFlag(n.name)"
                       class="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 font-medium">
                   ตรวจสอบ
                 </span>
               </div>
-              <div class="text-xl font-bold text-gray-900" x-text="calcVal(n.raw)"></div>
-              <div class="text-xs text-gray-400" x-text="n.unit"></div>
+              <div class="text-xl font-bold text-stone-900" x-text="calcVal(n.raw)"></div>
+              <div class="text-xs text-stone-400" x-text="n.unit"></div>
             </div>
           </template>
         </div>
       </div>
 
       <!-- Full Nutrient Table -->
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div class="px-4 py-3 border-b border-gray-100">
-          <h2 class="font-semibold text-gray-800">ค่าโภชนาการทั้งหมด
-            <span class="text-sm font-normal text-gray-500" x-text="'(ต่อ ' + weight + ' กรัม)'"></span>
+      <div class="bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-stone-100">
+          <h2 class="font-semibold text-stone-800">ค่าโภชนาการทั้งหมด
+            <span class="text-sm font-normal text-stone-500" x-text="'(ต่อ ' + amount + ' ' + unitsApi.shortLabel(unit) + ')'"></span>
           </h2>
         </div>
 
         <!-- Mobile: 2-col stacked -->
-        <div class="sm:hidden divide-y divide-gray-100">
+        <div class="sm:hidden divide-y divide-stone-100">
           <template x-for="n in nutrients" :key="n.nutrient_name">
             <div class="flex items-center justify-between px-4 py-3"
                  :class="pdNames.includes(n.nutrient_name) ? 'bg-yellow-50' : ''">
-              <span class="text-sm text-gray-700 flex items-center gap-1">
+              <span class="text-sm text-stone-700 flex items-center gap-1">
                 <span x-show="pdNames.includes(n.nutrient_name)" class="w-2 h-2 bg-yellow-400 rounded-full flex-shrink-0"></span>
                 <span x-text="n.nutrient_name"></span>
               </span>
               <div class="text-right">
-                <span class="font-semibold text-gray-900" x-text="calcVal(n.per_100g)"></span>
-                <span class="text-xs text-gray-400 ml-1" x-text="n.unit"></span>
+                <span class="font-semibold text-stone-900" x-text="calcVal(n.per_100g)"></span>
+                <span class="text-xs text-stone-400 ml-1" x-text="n.unit"></span>
               </div>
             </div>
           </template>
@@ -237,24 +236,24 @@
         <!-- Desktop: Table -->
         <div class="hidden sm:block overflow-x-auto">
           <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
+            <thead class="bg-stone-50 text-stone-600 text-xs uppercase tracking-wide">
               <tr>
                 <th class="text-left px-4 py-3 font-medium">สารอาหาร</th>
                 <th class="text-right px-4 py-3 font-medium">ต่อ 100 ก.</th>
-                <th class="text-right px-4 py-3 font-medium" x-text="'ต่อ ' + weight + ' ก.'"></th>
+                <th class="text-right px-4 py-3 font-medium" x-text="'ต่อ ' + amount + ' ' + unitsApi.shortLabel(unit)"></th>
                 <th class="text-left px-4 py-3 font-medium">หน่วย</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-stone-100">
               <template x-for="n in nutrients" :key="n.nutrient_name">
-                <tr :class="pdNames.includes(n.nutrient_name) ? 'bg-yellow-50' : 'hover:bg-gray-50'">
-                  <td class="px-4 py-2.5 text-gray-800 flex items-center gap-2">
+                <tr :class="pdNames.includes(n.nutrient_name) ? 'bg-yellow-50' : 'hover:bg-stone-50'">
+                  <td class="px-4 py-2.5 text-stone-800 flex items-center gap-2">
                     <span x-show="pdNames.includes(n.nutrient_name)" class="w-2 h-2 bg-yellow-400 rounded-full flex-shrink-0"></span>
                     <span x-text="n.nutrient_name"></span>
                   </td>
-                  <td class="px-4 py-2.5 text-right text-gray-600" x-text="n.per_100g ?? '—'"></td>
-                  <td class="px-4 py-2.5 text-right font-semibold text-gray-900" x-text="calcVal(n.per_100g)"></td>
-                  <td class="px-4 py-2.5 text-gray-400" x-text="n.unit"></td>
+                  <td class="px-4 py-2.5 text-right text-stone-600" x-text="n.per_100g ?? '—'"></td>
+                  <td class="px-4 py-2.5 text-right font-semibold text-stone-900" x-text="calcVal(n.per_100g)"></td>
+                  <td class="px-4 py-2.5 text-stone-400" x-text="n.unit"></td>
                 </tr>
               </template>
             </tbody>
@@ -287,11 +286,11 @@
   </main>
 
   <!-- Footer -->
-  <footer class="mt-8 bg-white border-t border-gray-200 py-6 px-4">
-    <div class="max-w-4xl mx-auto text-center text-sm text-gray-500 space-y-1">
-      <p>ข้อมูลโภชนาการจาก <strong class="text-gray-700">Thai Food Composition Database (Thai FCD)</strong></p>
+  <footer class="mt-8 bg-white border-t border-stone-200 py-6 px-4">
+    <div class="max-w-4xl mx-auto text-center text-sm text-stone-500 space-y-1">
+      <p>ข้อมูลโภชนาการจาก <strong class="text-stone-700">Thai Food Composition Database (Thai FCD)</strong></p>
       <p>สถาบันโภชนาการ มหาวิทยาลัยมหิดล (INMU) และ กรมอนามัย กระทรวงสาธารณสุข — เพื่อการศึกษาและไม่ใช่เชิงพาณิชย์</p>
-      <p class="text-xs text-gray-400 pt-1">ค่าโภชนาการเป็นค่าเฉลี่ยต่อ 100 กรัม</p>
+      <p class="text-xs text-stone-400 pt-1">ค่าโภชนาการเป็นค่าเฉลี่ยต่อ 100 กรัม</p>
     </div>
   </footer>
 
@@ -301,9 +300,11 @@
         food: null,
         nutrients: [],
         sanityCheck: { status: 'ok', flags: [] },
-        householdMeasures: { available: false, measures: [], note: '' },
+        unitConversions: window.FoodCheckUnits.defaultConversions(),
+        unitsApi: window.FoodCheckUnits,
         loading: true,
-        weight: 100,
+        amount: 100,
+        unit: 'g',
         foodId: null,
         pdNames: [
           'Energy, by calculation',
@@ -315,7 +316,20 @@
         ],
         pdNutrients: [],
 
+        get grams() {
+          return this.unitsApi.gramsFor(this.amount, this.unit, this.unitConversions) ?? this.amount;
+        },
+
+        onUnitChange(newUnit, oldUnit) {
+          if (newUnit === oldUnit) return;
+          const currentGrams = this.unitsApi.gramsFor(this.amount, oldUnit, this.unitConversions);
+          const newAmount = this.unitsApi.amountFor(currentGrams, newUnit, this.unitConversions);
+          if (newAmount !== null) this.amount = this.unitsApi.round(newAmount, 4);
+        },
+
         async load() {
+          this.$watch('unit', (newUnit, oldUnit) => this.onUnitChange(newUnit, oldUnit));
+
           const path = window.location.pathname;
           this.foodId = path.split('/').pop();
           // ดึง ids จาก URL ถ้ามา from compare
@@ -329,7 +343,7 @@
           this.food = data.food;
           this.nutrients = data.nutrients;
           this.sanityCheck = data.sanity_check || { status: 'ok', flags: [] };
-          this.householdMeasures = data.household_measures || { available: false, measures: [], note: '' };
+          this.unitConversions = data.unit_conversions || this.unitsApi.defaultConversions();
 
           // เซ็ต PD summary
           this.pdNutrients = this.pdNames.map(name => {
@@ -400,7 +414,7 @@
           const num = this.numericValue(raw);
           if (num === '—') return '—';
           if (isNaN(num)) return raw;
-          const val = num * this.weight / 100;
+          const val = num * this.grams / 100;
           const formatted = val % 1 === 0 ? val.toFixed(0) : val.toFixed(2);
           return Number(formatted).toLocaleString('en-US', {
             minimumFractionDigits: val % 1 === 0 ? 0 : 2,
